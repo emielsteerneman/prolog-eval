@@ -1,12 +1,11 @@
 import Data.Char
 import Debug.Trace
 
-str = "b0 :- a0, a1."
-
-
 --------------------------
 -- TOKENIZER
 --------------------------
+-- Test Tokenizer
+tt = tokenize "b0 :- A0, a1."
 
 data Token =  
 	  CONST String
@@ -18,14 +17,14 @@ data Token =
 tokenize :: String -> [Token]
 tokenize [] = []
 tokenize str@(c : cs)
-	| isLower c = (CONST word) : tokenize rest
-	| isUpper c = (VAR word) : tokenize rest
+	| isLower c = (CONST word) : tokenize wordRest
+	| isUpper c = (VAR word) : tokenize wordRest
 	| isDot c = DOT : tokenize cs
 	| c == '-' = OP : tokenize cs
 	| elem c " :," = tokenize cs
 	| otherwise = trace ("  --|" ++ [c] ++ "|--  ") $ error "Unrecognized character "
 	where 
-		(word, rest) = getWord str
+		(word, wordRest) = getWord str
 
 getWord str = (takeWhile isAlphaNum str, dropWhile isAlphaNum str)
 
