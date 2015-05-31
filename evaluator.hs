@@ -23,8 +23,8 @@ tokenize str@(c : cs)
 	| elem c " ," = tokenize cs									-- skip ws and comma
 	| otherwise = trace ("  --|" ++ [c] ++ "|--  ") $ error "Unrecognized character " 	-- unrecognized character
 	where 
-		(word, wordRest) = getWord str							-- e.g. turn "a0 b0 c0." into ("a0", " b0 c0.")
-		(op  , opRest  ) = getOp str							-- e.g. turn ":= b0 c0." into (":=", " b0 c0.")
+		(word, wordRest) = getWord str							-- e.g. turns "a0 b0 c0." into ("a0", " b0 c0.")
+		(op  , opRest  ) = getOp str							-- e.g. turns ":= b0 c0." into (":=", " b0 c0.")
 
 		
 -- HELPER FUNCTIONS
@@ -43,3 +43,23 @@ isColon c = c == ':'
 --------------------------
 -- PARSER
 --------------------------
+
+data Program = Rule Token Token [Token]
+	deriving(Show)
+	
+
+parse (const@(CONST conStr) : op@(OP opStr) : xs) 
+	| isValid = :Rule const op arguments
+	| otherwise = error "No arguments or invalid arguments"
+	where
+		(isValid, arguments, rest) = validArguments xs
+	
+validArguments ((DOT) : xs) = (True, [], xs)
+validArguments (const@(CONST str) : xs) = (isValid, const : arguments, rest)
+	where
+		(isValid, arguments, rest) = validArguments xs
+
+--validArguments ((VAR   str) : xs) = validArguments xs
+validArguments xs = (False, [], xs)
+
+-- let y = "b0 c0 d0. e0 f0 g0"
