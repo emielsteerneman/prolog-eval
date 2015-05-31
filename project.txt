@@ -17,7 +17,7 @@ consta0 = Const "a0"
 
 http://en.wikipedia.org/wiki/Prolog_syntax_and_semantics
 term
-	atoms				[], x, blue, 'Taco', 'some atom' 		atoms with spaces, special characters or beginning with a capital must be quoted.
-	variables			begin with a capital or _, contain letters, numbers and _
+	atoms				[], x, blue, 'Taco', 'some atom', p(a) 		atoms with spaces, special characters or beginning with a capital must be quoted.
+	variables			begin with a capital
 	compound terms		composed of an atom called a functor, and a number of arguments which are terms	
 						Head :- Body.
