@@ -3,29 +3,43 @@ module Test where
 import Types
 
 simple = [
-	Clause (Predicate "a0" []) [],
-    Clause (Predicate "b0" []) [],
-    Clause (Predicate "c0" []) [Clause (Predicate "a0" []) [],Clause (Predicate "b0" []) []]
+	Clause (Atom "a" []) [],
+    Clause (Atom "b" []) [],
+    Clause (Atom "c" []) [Atom "a" [], Atom "b" [], Atom "d" []],
+	Clause (Atom "d" []) [Atom "e" [], Atom "f" []]
     ]
-
-royalfamily = [Clause (Predicate "woman" ["juliana"]) [],
-    Clause (Predicate "woman" ["beatrix"]) [],
-    Clause (Predicate "woman" ["margriet"]) [],
-    Clause (Predicate "woman" ["irene"]) [],
-    Clause (Predicate "woman" ["Christina"]) [],
-    Clause (Predicate "man" ["bernhard"]) [],
-    Clause (Predicate "mother" ["juliana","beatrix"]) [],
-    Clause (Predicate "mother" ["juliana","margriet"]) [],
-    Clause (Predicate "mother" ["juliana","irene"]) [],
-    Clause (Predicate "father" ["bernhard","beatrix"]) [],
-    Clause (Predicate "father" ["bernhard","margriet"]) [],
-    Clause (Predicate "child" ["K","O"]) [Clause (Predicate "mother" ["O","K"]) []],
-    Clause (Predicate "child" ["K","O"]) [Clause (Predicate "father" ["O","K"]) []],
-    Clause (Predicate "son" ["Z","O"]) [Clause (Predicate "child" ["Z","O"]) [], Clause (Predicate "man" ["Z"]) []]
-    ]
+royalfamily :: [Clause]
+royalfamily = [
+	-- FACTS
+	Clause (Atom "woman" ["juliana"]) [],
+    Clause (Atom "woman" ["beatrix"]) [],
+    Clause (Atom "woman" ["margriet"]) [],
+    Clause (Atom "woman" ["irene"]) [],
+    Clause (Atom "woman" ["Christina"]) [],
+    Clause (Atom "man" ["bernhard"]) [],
+    Clause (Atom "mother" ["juliana","beatrix"]) [],
+    Clause (Atom "mother" ["juliana","margriet"]) [],
+    Clause (Atom "mother" ["juliana","irene"]) [],
+    Clause (Atom "father" ["bernhard","beatrix"]) [],
+    Clause (Atom "father" ["bernhard","margriet"]) []
+	
+	-- Atoms
+	{-
+    Clause (Atom "child" ["K","O"]) [
+		Clause (Atom "mother" ["O","K"]) []
+	],
+    Clause (Atom "child" ["K","O"]) [
+		Clause (Atom "father" ["O","K"]) []
+	],
+    Clause (Atom "son" ["Z","O"]) [
+		Clause (Atom "child" ["Z","O"]) [], 
+		Clause (Atom "man" ["Z"]) []
+	]
+	-}
+	]
     
     -- How to not
-    -- Clause (Predicate "sister" ["X","Y"]) [Clause (Predicate "child" ["X","O"]) [], Clause (Predicate "woman" ["X"] [],Clause (Predicate "child" ["Y","O"]) [],Clause ],
+    -- Clause (Atom "sister" ["X","Y"]) [Clause (Atom "child" ["X","O"]) [], Clause (Atom "woman" ["X"] [],Clause (Atom "child" ["Y","O"]) [],Clause ],
 
 
     

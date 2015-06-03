@@ -2,6 +2,6 @@ module Types where
 
 type Program = [Clause]
 
-data Clause = Clause Predicate [Clause] deriving(Show)
+data Clause = Clause Atom [Atom] deriving(Show, Eq)
 
-data Predicate = Predicate String [String] deriving(Show)
+data Atom = Atom String [String] deriving(Show, Eq)
