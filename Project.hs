@@ -3,9 +3,10 @@ import Types
 import Debug.Trace
 
 t1 = evalProp (Atom "c" []) simple
-t2 = evalProp (Atom "q" [Const "a"]) simple
-t3 = evalProp (Atom "son" [Const "henk", Const "bernhard"]) royalfamily
-t4 = evalProp (Atom "son" [Const "henk", Const "henk"]) royalfamily
+t2 = evalProp (Atom "b" []) simple
+t3 = evalProp (Atom "q" [Const "a"]) simple
+t4 = evalProp (Atom "son" [Const "henk", Const "bernhard"]) royalfamily
+t5 = evalProp (Atom "son" [Const "henk", Const "henk"]) royalfamily
 
 -- empty if true, returns a path if false
 evalProp atom@(Atom name vars) program = checkAtom atom program
@@ -35,43 +36,16 @@ proveClause atom@(Atom name args) clause@(Clause atomC@(Atom nameC argsC) childr
 	where
 -- [(Term, Term)] 	returns [(O -> henk), (K -> bernard)]
 		mapping = createMapping args argsC
--- [Atom]			replaces all variables with constants. child(Z, O) -> Son(bernard, henk)
+-- [Atom]			replaces all variables with constants. child(Z, O) -> child(bernard, henk)
 		newChildren = swapAtoms children mapping
 -- [Atom]			Prove each atom of newChildren by entering it in checkAtom
 		prove = foldl (++) [] $ map (\a -> checkAtom a program) newChildren
 		
-{-		
-evalClause :: Clause -> Program -> [Atom]
-evalClause c@(Clause (Atom name args) atoms) program = 
-	foldl (++) [] $ map (\atom@(Atom aname vars) -> trace ("Proving " ++ name ++ " -> " ++ aname) (gc atom program)) atoms
-		
-		clausesName = filter (\c@(Clause a@(Atom aname avars) atoms) -> name == aname) program  		-- Get all clauses with the same name on the LHS
-		truthTable = map(\clause -> e clause program) clausesName										-- Prove all the clauses we got from the LHS
-
-		
-swapClause :: Atom -> Clause -> [Atom]		
-swapClause atom@(Atom name vars) clause@(Clause (Atom cname cvars) children) = 
-	Clause (Atom )newChildren
-	where
-		mapping = createMapping vars cvars
-		newChildren = swapAtoms children mapping
-
-
-	
-b = [Atom "b" [Var "X", Var "Y"], Atom "c" [Var "Y", Var "X"], Atom "d" [Var "X", Var "X"]]
-c = Clause(Atom "a" [Var "X", Var "Y"]) [Atom "b" [Var "X", Var "Y"], Atom "c" [Var "Y", Var "X"]]
-d = Atom "a" [Const "var1", Const "var2"]
-
-
-vars = [Const "a", Const "b"]
-avars= [Var "X", Var "Y"]
-m = createMapping avars vars
--}		
-
 -- 				 Const     Var
 createMapping :: [Term] -> [Term] -> [(Term, Term)]
 createMapping [] [] = []
 createMapping (x:xs) (y:ys) = (y, x) : createMapping xs ys
+
 
 -- for each atom, get all the vars and swap them with swapVars
 swapAtoms :: [Atom] -> [(Term, Term)] -> [Atom]
@@ -83,18 +57,46 @@ swapVars listOfVars mapping = map (\(var@(Var v)) -> getSwap var mapping) listOf
 getSwap :: Term -> [(Term, Term)] -> Term		
 getSwap var mapping = snd $ (filter ((==var).fst) mapping) !! 0
 
-	
-isAFact atom program = any (\(Clause _atom ac) -> atom == _atom && ac == []) program
-w = Atom "p" [Const "a"]
-{-	
-	FACT if it has no children
-	get all with same name
-		check if it has no children -> FACT
-			if variables match -> True
-		if it has children
-			replace variables
+
+
+
+
+
+x = Atom "p" [Var "X", Var "Y", Const "Z"]
+y = Atom "p" [Const "c", Const "d", Const "d"]
+
+
+t (Atom t1 args1) (Atom t2 args2) = compareArgs args1 args2
+
+compareArgs [] [] = []
+compareArgs a1@(x:xs) a2@(y:ys) = return
+	 where
+		compare = (z x y)
+		return
+			| compare == [] = []
+			| xs == [] = compare		-- last element 
+			| xs /= [] && compare == [] = []		-- Something went wrong, xs not empty
+			| otherwise = compare ++ (compareArgs xs ys)
+
+finalCheck (Atom x listx) (Atom y listy)
+	| (length listx) /= (length compare)
+	where 
+		compare = compareArgs listx listy
 			
--}
+w = t x y
+
+--	Var				Const
+z t1@(Var v1) t2@(Const v2) = [(t1, t2)]
+z t1@(Const v1) t2@(Const v2)
+	| t1 == t2 = [(t1, t2)]
+	| otherwise = []
+
+	
+z1 = z (Var "X") (Const "x")
+z2 = z (Const "x") (Const "x")
+z3 = z (Const "x") (Const "y")
+
+
 
 
 
