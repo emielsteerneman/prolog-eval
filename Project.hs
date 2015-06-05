@@ -62,7 +62,7 @@ getSwap var mapping = snd $ (filter ((==var).fst) mapping) !! 0
 
 
 
-x = Atom "p" [Var "X", Var "Y", Const "Z"]
+x = Atom "p" [Var "X", Var "Y", Const "X"]
 y = Atom "p" [Const "c", Const "d", Const "d"]
 
 
@@ -72,17 +72,14 @@ compareArgs [] [] = []
 compareArgs a1@(x:xs) a2@(y:ys) = return
 	 where
 		compare = (z x y)
+		next = compareArgs xs ys
 		return
-			| compare == [] = []
-			| xs == [] = compare		-- last element 
-			| xs /= [] && compare == [] = []		-- Something went wrong, xs not empty
-			| otherwise = compare ++ (compareArgs xs ys)
+			| xs == [] 					= compare	-- Last element, return compare
+			| xs /= [] && next == [] 	= []		-- Not last element, previous was [], so error
+			| compare == []				= []		-- Our compare was wrong, so error
+			| otherwise = compare ++ next
 
-finalCheck (Atom x listx) (Atom y listy)
-	| (length listx) /= (length compare)
-	where 
-		compare = compareArgs listx listy
-			
+
 w = t x y
 
 --	Var				Const
