@@ -10,11 +10,16 @@ simple = [
 	--Clause (Atom "d" []) [],
 	
 	
-	Clause (Atom "p" [Const "a"]) [],
-	Clause (Atom "p" [Const "b"]) [],
-	Clause (Atom "p" [Const "c"]) [],
+	Clause (Atom "p" [Const "a", Const "b"]) [],
+	Clause (Atom "p" [Const "d", Const "e"]) [],
+	Clause (Atom "p" [Var   "G", Const "h"]) [],
+	Clause (Atom "p" [Var   "J", Var "K"]) [],
 	
-	Clause (Atom "q" [Var "X"]) [Atom "p" [Var "X"]]
+	Clause (Atom "q" [Const "i", Const "j"]) [],
+	Clause (Atom "q" [Var   "K", Const "b"]) [],
+	
+	Clause (Atom "r" [Var "X", Var "Y"]) [Atom "p" [Var "X", Var "Y"]],
+	Clause (Atom "r" [Var "X", Var "Y"]) [Atom "q" [Var "X", Var "Y"]]
     ]
 	
 royalfamily :: [Clause]
