@@ -10,6 +10,6 @@ data Term = Const String
 		|   Var String 
 		|   Anything deriving(Show, Eq)
 		
-data Sub =  Sub [(Term, Term)] | NoSub deriving (Show, Eq)
+data Sub = Sub [(Term, Term)] | NoSub deriving (Show, Eq)
 
-data Result = Fact [Sub] | NoFact | Wer deriving(Show, Eq)
+data Result = Fact [Sub] | NoFact deriving(Show, Eq)

@@ -4,7 +4,7 @@ import Types
 	
 royalfamily :: [Clause]
 royalfamily = [
-	Clause (Atom "woman" 	[Const "juliana"]) [],
+	Clause (Atom "woman" 	[Var "juliana"]) [],
     Clause (Atom "woman" 	[Const "beatrix"]) [],
     Clause (Atom "woman" 	[Const "margriet"]) [],
     Clause (Atom "woman" 	[Const "irene"]) [],
@@ -20,6 +20,6 @@ royalfamily = [
     Clause (Atom "child" 	[Var "K",Var "O"]) 	[(Atom "mother" [Var "O",Var "K"])],
     Clause (Atom "child" 	[Var "K",Var "O"]) 	[(Atom "father" [Var "O",Var "K"])],
     Clause (Atom "son" 		[Var "Z",Var "O"])	[(Atom "child"  [Var "Z",Var "O"]), (Atom "man" [Var "Z"])]
-]
+	]
 
     
