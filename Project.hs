@@ -1,3 +1,5 @@
+module Project where
+
 import Test
 import Types
 import Debug.Trace
@@ -61,39 +63,140 @@ getSwap :: Term -> [(Term, Term)] -> Term
 getSwap var mapping = snd $ (filter ((==var).fst) mapping) !! 0
 
 
+wer = evalAtom (Atom "r1" [Var "X", Var "Y"]) simple
 
-
-
+evalAtom :: Atom -> Program -> Result
 evalAtom atom@(Atom name args) program = return
 	where
 		atomFact = evalFact atom program			-- Is this atom a fact?
+		ruleFact = evalRule atom program
 		return 
 			| atomFact /= NoFact = atomFact		-- Atom is a fact!
-			| otherwise = Wer
+			| ruleFact /= NoFact = ruleFact 
+			| otherwise = NoFact
+			
+			
+r1 = evalRule        (Atom "r1" [Var "X", Var "Y"]) simple
+r2 = evalRule        (Atom "r2" [Var "X", Var "Y"]) simple
+r  = evalRule        (Atom "r" [Var "X", Var "Y"]) simple
 
-			
-			
-w = evalRule        (Atom "r" [Var "X", Var "Y"]) simple
-x = evalSingleRule	(Atom "r" [Const "a", Var "B"]) (Clause (Atom "r" [Var "X", Var "Y"]) [Atom "p" [Var "X", Var "Y"], Atom "q" [Var "X", Var "Y"]]) simple	
+
+-- x = evalSingleRule	(Atom "r" [Const "a", Var "B"]) (Clause (Atom "r" [Var "X", Var "Y"]) [Atom "p" [Var "X", Var "Y"], Atom "q" [Var "X", Var "Y"]]) simple	
+-- x = evalSingleRule	(Atom "r" [Var "A", Var "B"]) (Clause (Atom "r" [Var "X", Var "Y"]) [Atom "s" [Var "X", Var "Y"]]) simple	
+-- z = evalSingleRule	(Atom "r" [Var "A", Var "B"]) (Clause (Atom "r" [Var "X", Var "Y"]) [Atom "p" [Var "X", Var "Y"], Atom "q" [Var "X", Var "Y"]]) simple	
+
+
 --           Clause (Atom "p" [Const "a", Const "b"]) [],
---  		 Clause (Atom "p" [Var   "J", Var "K"]) [],
 --			 Clause (Atom "p" [Var   "G", Const "h"]) [],
 --			 Clause (Atom "q" [Var   "K", Const "b"]) [],
-	
+
+evalRule :: Atom -> Program -> Result	
 evalRule atom@(Atom name args) program = return
 	where
+		-- get all rules
 		allRules = filter (\(Clause _atom@(Atom _name _args) children) -> name == _name && length args == length _args && children /= []) program
-		return = allRules
-		forAll = map (\clause -> evalSingleRule atom clause program) allRules
+		-- prove all rules by entering them into evalSingleRule
+		proveRules = map (\clause -> evalSingleRule atom clause program) allRules
+		-- isFact if there is any rule that is a Fact
+		isFact = any (\rule -> rule /= NoFact) proveRules
+		-- merge = mergeSubs forAll
+		mergeSubs = foldl (++) [] $ map (\(Fact sub) -> sub) proveRules
+		
+		return 
+			| isFact = Fact mergeSubs
+			| otherwise = NoFact
+		-- = trace("proveRules: " ++ show(proveRules) ++ "\n") $ Fact mergeSubs
+		
+		
+{-
+	Try to prove all the facts. Every fact returns a Fact [Sub]
+	Fact [
+		Sub [(Var "X",Const "a"),(Var "Y",Const "b")],
+		Sub [(Var "X",Const "c"),(Var "Y",Const "d")]
+	]
+	Fact [
+		Sub [(Var "X",Const "c"),(Var "Y",Const "d")],
+		Sub [(Var "X",Const "e"),(Var "Y",Const "f")]
+	]
+-}		
 
---evalSingleRule :: Atom -> Clause -> Program -> Result
+
+
+-- z = evalSingleRule (Atom "r" [Var "q", Var "Y"]) (Clause (Atom "r" [Var "X", Var "Y"]) [Atom "sdf" [Var "Y", Var "X"], Atom "q" [Var "X", Var "Y"]]) simple
+
+{-
+[
+Fact [
+	Sub [(Var "X",Const "a"),(Var "Y",Const "b")],
+	Sub [(Var "X",Const "c"),(Var "Y",Const "d")]
+	],
+Fact [
+	Sub [(Var "X",Const "c"),(Var "Y",Const "d")],
+	Sub [(Var "X",Const "e"),(Var "Y",Const "f")]
+	]
+]
+-}
+
+evalSingleRule :: Atom -> Clause -> Program -> Result		
 evalSingleRule atom@(Atom name args) clause@(Clause atomC@(Atom nameC argsC) children) program = return
 	where
-		mapping = createMapping args argsC
-		return = proveAll
-		subs = swapAtoms children mapping
-		proveAll = map (\sub -> evalAtom sub program) subs
+		-- [Atom]	swap all arguments of the children
+		newChildren			= swapAtoms children $ createMapping args argsC
+		-- [Result] Prove every child
+		proveNewChildren	= map (\child -> evalAtom child program) newChildren
+		-- [[Sub]] if any child return NoFact, then the clause is NoFact
+		isFact 				= notElem NoFact proveNewChildren
+		-- Turn [Fact [sub1], Fact [sub2], Fact [sub3]] into  [[sub1], [sub2], [sub3]]
+		subsList 			= map (\(Fact subs) -> subs) proveNewChildren
+		-- Check if any sub makes all rules True
+		mergeSubsList = mergeSubs subsList
+		-- [[sub1], [sub2], [sub3]] -> Fact [[sub1], [sub2], [sub3]]
+		myFact = Fact mergeSubsList
+		return 
+			| isFact == False = NoFact
+			| otherwise = myFact
+		
+mergeFacts [] = []
+mergeFacts (x:xs) = [list] ++ mergeFacts xs
+	where
+		(Fact list) = x		
+		
+mergeSubs [x] = x
+mergeSubs (x:y:z) = mergeSubs (add : z)
+	where
+		add = mergeSub x y
+		
+x' = [Sub [(Var "X",Const "a"),(Var "Y",Const "b")], Sub [(Var "A",Const "a"),(Var "B",Const "b")], Sub [(Var "C",Const "c"),(Var "D",Const "d")]]
+y' = [Sub [(Var "Y",Const "b"),(Var "X",Const "a")], Sub [(Var "B",Const "b"),(Var "A",Const "a")], Sub [(Var "Q",Const "q"),(Var "R",Const "r")]]		
+
+mergeSub :: [Sub] -> [Sub] -> [Sub]
+mergeSub [] _ = []
+mergeSub l1@(x:xs) l2 = add ++ mergeSub xs l2
+	where
+		add
+			| subInSubs x l2 = [x]
+			| otherwise = []
+
+
+-- sub in list of subs
+subInSubs :: Sub -> [Sub] -> Bool
+subInSubs sub subs = any (\_sub -> subsEqual sub _sub) subs
+
+x = Sub [(Var "X",Const "a"),(Var "Y",Const "b")]
+y = Sub [(Var "Y",Const "b"),(Var "X",Const "a")]		
 	
+subsEqual :: Sub -> Sub -> Bool	
+subsEqual s1 s2 = subsEqual' x y where (Sub x, Sub y) = (s1, s2)
+
+subsEqual' :: [(Term, Term)] -> [(Term, Term)] -> Bool		
+subsEqual' [] _ = True		
+subsEqual' l1@(x:xs) l2 = (elem x l2) && (subsEqual' xs l2)
+		
+q = subsEqual x y	
+
+
+
+		
 {-	
 proveClause :: Atom -> Clause -> Program -> Result
 proveClause atom@(Atom name args) clause@(Clause atomC@(Atom nameC argsC) children) program = 
@@ -117,21 +220,23 @@ evalFact :: Atom -> Program -> Result
 evalFact atom@(Atom name args) program = return
 	where
 		return
-			| allFacts == [] = NoFact
+			| allFacts == [] = NoFact			-- The atom doesn't exist on the RHS
+			| args == [] = Fact []		-- The atom does exist, and has no arguments, making it correct
+			| subsNoNone== [(Sub [])] = Fact [] 
 			| subsNoNone==[] = NoFact
-			| otherwise = Fact subsNoNone
+			| otherwise = Fact subsNoNone		-- 
 		allFacts = filter (\(Clause _atom@(Atom _name _args) ac) -> (length args) == (length _args) && name == _name && ac == []) program
 		subs 	 = map (\fact -> compareAtoms atom (getAtom fact)) allFacts
-		subsNoNone=filter (\sub -> sub /= NoSub) subs
+		subsNoNone=filter (\sub -> sub /= NoSub) subs		-- remove all NoSub, leaving only the correct rules for swapping
 
 
 compareAtoms :: Atom -> Atom -> Sub
-compareAtoms (Atom t1 args1) (Atom t2 args2) = result
+compareAtoms (Atom t1 args1) (Atom t2 args2) = compare
 	where 
 		compare = compareArgs args1 args2
-		result
-			| (Sub []) == compare = NoSub
-			| otherwise = compare
+		-- result
+			-- | (Sub []) == compare = NoSub
+			-- | otherwise = compare
 
 
 compareArgs :: [Term] -> [Term] -> Sub
@@ -162,11 +267,16 @@ getAtom c = a where (Clause a _) = c
 		
 
 		
--- ==== TESTS		
-f1 = evalFact (Atom "p" [Const "X", Const "b"]) simple
-f2 = evalFact (Atom "p" [Var "X", Const "b"]) simple
+-- ==== TESTS
+f0 = evalFact (Atom "a" []) simple	
+f1 = evalFact (Atom "q" [Var "X", Var "Y"]) simple
+f2 = evalFact (Atom "p" [Const "a", Var "Y"]) simple
+f3 = evalFact (Atom "p" [Const "a", Const "b"]) simple
+f4 = evalFact (Atom "p" [Const "b", Var "Y"]) simple
+
 	
-fs0 = compareAtoms	(Atom "a" [Const "x"]) (Atom "b" [Const "x"])
+fs0 = compareAtoms	(Atom "a" [Const "x"])
+					(Atom "b" [Const "x"])
 fs1 = compareAtoms	(Atom "a" [Var "W", Var "X"  , Const "Y", Const "Z"])
 					(Atom "b" [Var "w", Const "x", Var "y"  , Const "Z"])	
 		
@@ -185,6 +295,21 @@ fs1 = compareAtoms	(Atom "a" [Var "W", Var "X"  , Const "Y", Const "Z"])
 		
 		
 
+		
+		
+		
+		
+		
+		
+	
+		
+		
+		
+		
+		
+		
+		
+		
 
 
 			

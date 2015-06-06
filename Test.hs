@@ -10,16 +10,22 @@ simple = [
 	--Clause (Atom "d" []) [],
 	
 	
-	Clause (Atom "p" [Const "a", Const "b"]) [],
-	Clause (Atom "p" [Const "d", Const "e"]) [],
-	Clause (Atom "p" [Var   "G", Const "h"]) [],
-	Clause (Atom "p" [Var   "J", Var "K"]) [],
+	-- Clause (Atom "p" [Const "a", Const "b"]) [],
+	Clause (Atom "p" [Const "c", Const "d"]) [],
 	
-	Clause (Atom "q" [Const "i", Const "j"]) [],
-	Clause (Atom "q" [Var   "K", Const "b"]) [],
+	Clause (Atom "q" [Const "c", Const "d"]) [],
+	-- Clause (Atom "q" [Const "e", Const "f"]) [],
 	
-	Clause (Atom "r" [Var "X", Var "Y"]) [Atom "p" [Var "X", Var "Y"]],
-	Clause (Atom "r" [Var "X", Var "Y"]) [Atom "q" [Var "X", Var "Y"]]
+	-- Clause (Atom "s" [Const	"a", Const "b"]) [],
+	-- Clause (Atom "s" [Const	"d", Const "z"]) [],
+	
+	Clause (Atom "r1" [Var "X", Var "Y"]) [Atom "p" [Var "X", Var "Y"]],
+	-- Clause (Atom "r1" [Var "X", Var "Y"]) [Atom "q" [Var "X", Var "Y"]],
+	
+	Clause (Atom "r2" [Var "X", Var "Y"]) [Atom "q" [Var "X", Var "Y"]],
+	
+	Clause (Atom "r" [Var "X", Var "Y"]) [Atom "r1" [Var "X", Var "Y"], Atom "r2" [Var "X", Var "Y"]]
+	--Clause (Atom "r" [Var "X", Var "Y"]) [Atom "p" [Const "c", Var "Y"], Atom "q" [Const "c", Var "Y"]]
     ]
 	
 royalfamily :: [Clause]
