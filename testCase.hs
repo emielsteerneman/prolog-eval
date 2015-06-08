@@ -1,6 +1,8 @@
+import Pretty
 import Test
 import Types
 import Project
+
 
 t0 = query (Atom "woman" [Const "juliana"]) royalfamily
 t1 = query (Atom "woman" [Var "X"]) royalfamily

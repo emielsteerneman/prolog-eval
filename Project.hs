@@ -3,12 +3,16 @@ module Project where
 import Test
 import Types
 import Debug.Trace
+import Data.List
+import Pretty
 
 {-
 	Emiel Steerneman	1499262
 	Olaf Haalstra		1482041
 -}
 
+
+w = query (Atom "r" [Var "X", Var "O"]) prog
 
 -- ENTRY
 query atom program = evalAtom atom program
@@ -51,6 +55,7 @@ evalSingleRule atom@(Atom name args) clause@(Clause atomC@(Atom nameC argsC) chi
 		-- Turn [Fact [sub1], Fact [sub2], Fact [sub3]] into  [[sub1], [sub2], [sub3]]
 		subsList 			= map (\(Fact subs) -> subs) proveNewChildren
 		-- Check if any sub makes all rules True
+		-- mergeSubsList = trace("\n\nsubsList: " ++ show(subsList)) $ mergeSubs subsList
 		mergeSubsList = mergeSubs subsList
 		-- [[sub1], [sub2], [sub3]] -> Fact [[sub1], [sub2], [sub3]]
 		myFact = Fact mergeSubsList
@@ -69,10 +74,17 @@ swapAtoms :: [Atom] -> [(Term, Term)] -> [Atom]
 swapAtoms atoms mapping = map (\(atom@(Atom name vars)) -> Atom name (swapVars vars mapping)) atoms
 
 swapVars :: [Term] -> [(Term, Term)] -> [Term]
-swapVars listOfVars mapping = map (\(var@(Var v)) -> getSwap var mapping) listOfVars
+swapVars listOfVars mapping = map (\var -> getSwap var mapping) listOfVars
+--trace("swapVars: " ++ show(listOfVars) ++ ", " ++ show(mapping)) $ 
 
 getSwap :: Term -> [(Term, Term)] -> Term		
-getSwap var mapping = snd $ (filter ((==var).fst) mapping) !! 0
+getSwap var mapping = result 
+-- getSwap var mapping = trace ("getSwap " ++ show(mapping) ++ " -> " ++ show(var) ++ " -> " ++ show(_filter) ++ " -> " ++ show(result)) $ result 
+	where 
+		_filter = (filter ((==var).fst) mapping)
+		result
+			| _filter == [] = var
+			| otherwise = snd $ _filter !! 0
 			
 			
 			
@@ -80,8 +92,8 @@ getSwap var mapping = snd $ (filter ((==var).fst) mapping) !! 0
 			
 {- ======= CODE USED FOR SELECTING WHICH SUBSTITUTION ARE TRUE FOR EVERY RULE ======= -}					
 mergeSubs :: [[Sub]] -> [Sub]			
-mergeSubs [x] = x
-mergeSubs (x:y:z) = mergeSubs (add : z)
+mergeSubs [x] = trace ("\nmergeSubs1: " ++ show(x)) $ x
+mergeSubs (x:y:z) = trace("\nmergeSubs: \n\t" ++ show(x) ++ " -> \n\t" ++ show(y) ++ "\nresult: " ++ "\n\t" ++ show(add)) $ mergeSubs (add : z)
 	where
 		add = mergeSub x y
 
@@ -99,6 +111,7 @@ subInSubs :: Sub -> [Sub] -> Bool
 subInSubs sub subs = any (\_sub -> subsEqual sub _sub) subs
 
 subsEqual :: Sub -> Sub -> Bool	
+
 subsEqual s1 s2 = subsEqual' x y where (Sub x, Sub y) = (s1, s2)
 
 subsEqual' :: [(Term, Term)] -> [(Term, Term)] -> Bool		
@@ -144,7 +157,7 @@ compareArgs a1@(x:xs) a2@(y:ys) = return
 		
 
 compareArg :: Term -> Term -> Sub
-compareArg t1@(Var v1)   t2@(Var v2)   = Sub [(t1, Anything)]	--VAR TO VAR		= ANYTHING
+compareArg t1@(Var v1)   t2@(Var v2)   = Sub [(t1, Anything)]	-- VAR TO VAR		= ANYTHING
 compareArg t1@(Var v1)   t2@(Const v2) = Sub [(t1, t2)]			-- VAR TO CONST		= VAR -> CONST
 compareArg t1@(Const v1) t2@(Var v2) = Sub []					-- CONST TO VAR		= []
 compareArg t1@(Const v1) t2@(Const v2)							-- CONST TO CONST	= [] || NoSub
@@ -154,4 +167,31 @@ compareArg t1@(Const v1) t2@(Const v2)							-- CONST TO CONST	= [] || NoSub
 
 getAtom :: Clause -> Atom
 getAtom c = a where (Clause a _) = c
+
+
+
+
+
+
+x = [	 [(Var "O",Const "o1"),(Var "Y",Const "d")],  [(Var "O",Const "o2"),(Var "Y",Const "b")]]
+y = [	 [(Var "X",Const "c"),(Var "Y",Const "b")],  [(Var "X",Const "c"),(Var "Y",Const "e")],  [(Var "X",Const "d"),(Var "Y", Const "d")]]
+z = [	 [(Var "Z",Const "z1"),(Var "Y",Const "b")],  [(Var "Z",Const "z2"),(Var "Y",Const "d")]]
+
+t = _mergeSubs [x, y, z]
+r = conflictingSub [(Var "O",Const "O1"),(Var "Y",Const "D")] [(Var "X",Const "C"),(Var "Y",Const "B")]
+
+_mergeSubs :: [[[(Term, Term)]]] -> [[(Term, Term)]]
+_mergeSubs [l] = l
+_mergeSubs (l1:l2:ls) = _mergeSubs(merge : ls)
+	where
+		merge = [(nub (x ++ y)) | x <- l1, y <- l2, not (conflictingSub x y)]
+
+conflictingSub x y = [] /= [(_x, _y) | _x@(x1, x2) <- x, _y@(y1, y2) <- y, x1 == y1, x2 /= y2 && notElem Anything [x2, y2]]
+	
+	
+-- [(x1, y1) | (x1, x2) <- [(1, 2), (3, 4)], (y1, y2) <- [(5, 6), (7, 8)]]
+	
+
+
+
 		
