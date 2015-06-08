@@ -27,7 +27,7 @@ prog = [
 	Clause (Atom "o"	[Const "o2", Const "d"]) [],
 	Clause (Atom "p"	[Const "p1", Const "c", Const "b"]) [],
 	Clause (Atom "q"	[Const "q1", Const "c", Const "b"]) [],
-	Clause (Atom "q"	[Const "q1", Const "c", Const "d"]) [],
+	Clause (Atom "q"	[Const "q2", Const "c", Const "b"]) [],
 	
-	Clause (Atom "r"	[Var "X", Var "O"]) [Atom "o" [Var "O", Var "Y"], Atom "p" [Const "P1", Var "X", Var "Y"], Atom "q" [Const "Q1", Var "X", Var "Y"]]
+	Clause (Atom "r"	[Var "X", Var "O"]) [Atom "o" [Var "O", Var "Y"], Atom "p" [Const "p1", Var "X", Var "Y"], Atom "q" [Const "q1", Var "X", Var "Y"]]
 	]    

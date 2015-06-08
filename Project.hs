@@ -18,17 +18,17 @@ w = query (Atom "r" [Var "X", Var "O"]) prog
 query atom program = evalAtom atom program
 
 evalAtom :: Atom -> Program -> Result
-evalAtom atom@(Atom name args) program = return
+evalAtom atom@(Atom name args) program = trace("\nevalAtom " ++ show(atom)) $ return
 	where
 		atomFact = evalFact atom program			-- Is this atom a constant?
 		ruleFact = evalRule atom program			-- Is this atom a rule?
 		return 
-			| atomFact /= NoFact = atomFact		-- The atom is constant and a fact
-			| ruleFact /= NoFact = ruleFact 	-- The atom is a rule and a fact
-			| otherwise = NoFact				-- The atom is not a fact
+			| atomFact /= NoFact = trace("\t" ++ show(atom) ++ " == " ++ show(atomFact)) $ atomFact		-- The atom is constant and a fact
+			| ruleFact /= NoFact = trace("\t" ++ show(atom) ++ " == " ++ show(atomFact)) $ ruleFact 	-- The atom is a rule and a fact
+			| otherwise = trace("\t" ++ show(atom) ++ " == NoFact") $ NoFact				-- The atom is not a fact
 
 evalRule :: Atom -> Program -> Result	
-evalRule atom@(Atom name args) program = return
+evalRule atom@(Atom name args) program = trace("evalRule " ++ show(atom) ++ " " ++ show(allRules)) $ return
 	where
 		-- get all rules
 		allRules = filter (\(Clause _atom@(Atom _name _args) children) -> name == _name && length args == length _args && children /= []) program
@@ -44,19 +44,28 @@ evalRule atom@(Atom name args) program = return
 			| otherwise = NoFact
 
 evalSingleRule :: Atom -> Clause -> Program -> Result		
-evalSingleRule atom@(Atom name args) clause@(Clause atomC@(Atom nameC argsC) children) program = return
+evalSingleRule atom@(Atom name args) clause@(Clause atomC@(Atom nameC argsC) children) program = 
+	-- trace ("termsList: " ++ show(termsList)) $ return
+	return
 	where
 		-- [Atom]	swap all arguments of the children
 		newChildren			= swapAtoms children $ createMapping args argsC
 		-- [Result] Prove every child
-		proveNewChildren	= map (\child -> evalAtom child program) newChildren
-		-- [[Sub]] if any child return NoFact, then the clause is NoFact
-		isFact 				= notElem NoFact proveNewChildren
+		evalChildren		= map (\child -> evalAtom child program) newChildren
+		-- if any child returns NoFact, then the clause is NoFact
+		isFact 				= notElem NoFact evalChildren
 		-- Turn [Fact [sub1], Fact [sub2], Fact [sub3]] into  [[sub1], [sub2], [sub3]]
-		subsList 			= map (\(Fact subs) -> subs) proveNewChildren
+		
+		-- wer = mergeChildren evalChildren
+		
+		subsList			= map (\(Fact sub) -> sub) evalChildren
+		-- subList				= map (\(Sub list) -> list) subsList
+		-- termsList			= map (\(Sub list) -> list) subList
 		-- Check if any sub makes all rules True
-		-- mergeSubsList = trace("\n\nsubsList: " ++ show(subsList)) $ mergeSubs subsList
-		mergeSubsList = mergeSubs subsList
+		mergeSubsList = trace("\n\nsubsList: " ++ show(subsList)) $ mergeSubs subsList
+		-- mergeSubsList = mergeSubs subsList
+		-- mergeTermsList = mergeTerms termsList
+		
 		-- [[sub1], [sub2], [sub3]] -> Fact [[sub1], [sub2], [sub3]]
 		myFact = Fact mergeSubsList
 		return 
@@ -133,7 +142,7 @@ evalFact atom@(Atom name args) program = return
 			| otherwise = Fact subsNoNone		-- 
 		allFacts = filter (\(Clause _atom@(Atom _name _args) ac) -> (length args) == (length _args) && name == _name && ac == []) program
 		subs 	 = map (\fact -> compareAtoms atom (getAtom fact)) allFacts
-		subsNoNone=filter (\sub -> sub /= NoSub) subs		-- remove all NoSub, leaving only the correct rules for swapping
+		subsNoNone=trace("\nevalFact " ++ show(atom) ++ "\n\tallFacts: " ++ show(allFacts) ++ "\n\tArgs: " ++ show(args) ++ "\n\tSubs: " ++ show(subs)) $ filter (\sub -> sub /= NoSub) subs		-- remove all NoSub, leaving only the correct rules for swapping
 
 		
 		
@@ -144,7 +153,7 @@ compareAtoms (Atom t1 args1) (Atom t2 args2) = compareArgs args1 args2
 
 compareArgs :: [Term] -> [Term] -> Sub
 compareArgs [] [] = Sub []
-compareArgs a1@(x:xs) a2@(y:ys) = return
+compareArgs a1@(x:xs) a2@(y:ys) = trace("compareAtoms " ++ show(a1) ++ " " ++ show(a2) ++ " -> " ++ show(return)) $ return
 	 where
 		compare	= compareArg x y
 		next	= compareArgs xs ys
@@ -172,21 +181,47 @@ getAtom c = a where (Clause a _) = c
 
 
 
+l = 
+	[
+		[
+			Sub	[(Var "O", Const "o1"), (Var "Y", Const "b")], 
+			Sub	[(Var "O", Const "o2"),	(Var "Y", Const "d")] 
+		],
+		[ 
+			Sub[(Var "X", Const "c")]
+		],
+		[ 
+			Sub[(Var "X", Const "c"), (Var "Y", Const "b")] 
+		]
+	]
 
+
+
+e = mergeChildren l
+mergeChildren (c1:c2:cs) = wer
+	where
+		t1 = map (\(Sub list) -> list) c1
+		t2 = map (\(Sub list) -> list) c2
+		wer = mergeTerms [t1, t2]
+		
+		
+getTerms (Sub list) = list
+
+		
 x = [	 [(Var "O",Const "o1"),(Var "Y",Const "d")],  [(Var "O",Const "o2"),(Var "Y",Const "b")]]
 y = [	 [(Var "X",Const "c"),(Var "Y",Const "b")],  [(Var "X",Const "c"),(Var "Y",Const "e")],  [(Var "X",Const "d"),(Var "Y", Const "d")]]
 z = [	 [(Var "Z",Const "z1"),(Var "Y",Const "b")],  [(Var "Z",Const "z2"),(Var "Y",Const "d")]]
 
-t = _mergeSubs [x, y, z]
+t = mergeTerms [x, y, z]
 r = conflictingSub [(Var "O",Const "O1"),(Var "Y",Const "D")] [(Var "X",Const "C"),(Var "Y",Const "B")]
 
-_mergeSubs :: [[[(Term, Term)]]] -> [[(Term, Term)]]
-_mergeSubs [l] = l
-_mergeSubs (l1:l2:ls) = _mergeSubs(merge : ls)
+mergeTerms :: [[[(Term, Term)]]] -> [[(Term, Term)]]
+mergeTerms [l] = l
+mergeTerms (l1:l2:ls) = mergeTerms(merge : ls)
 	where
 		merge = [(nub (x ++ y)) | x <- l1, y <- l2, not (conflictingSub x y)]
 
-conflictingSub x y = [] /= [(_x, _y) | _x@(x1, x2) <- x, _y@(y1, y2) <- y, x1 == y1, x2 /= y2 && notElem Anything [x2, y2]]
+conflictingSub s1 s2 = [] /= [(x, y) | x@(x1, x2) <- s1, y@(y1, y2) <- s2, x1 == y1, x2 /= y2 && notElem Anything [x2, y2]]
 	
 	
 -- [(x1, y1) | (x1, x2) <- [(1, 2), (3, 4)], (y1, y2) <- [(5, 6), (7, 8)]]
