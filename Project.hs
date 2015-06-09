@@ -11,24 +11,20 @@ import Pretty
 	Olaf Haalstra		1482041
 -}
 
-
-e = query (Atom "sister" [Var "X", Var "Y"]) royalfamily
-
 -- ENTRY
 query atom program = evalAtom atom program
 
 evalAtom :: Atom -> Program -> Result
 evalAtom atom@(Atom name args) program = return
 	where
-		atomFact = evalFact atom program		-- Is this atom a constant?
-		ruleFact = evalRule atom program		-- Is this atom a rule?
-		result
-			| atomFact /= NoFact = atomFact		-- The atom is constant and a fact
-			| ruleFact /= NoFact = ruleFact 	-- The atom is a rule and a fact
-			| otherwise = NoFact				-- The atom is not a fact
-		return = rinse result args				-- Removes all variables in all the returned subs that are not present in the arguments of the atom
+		atomFact = evalFact atom program				-- Is this atom a constant?
+		ruleFact = evalRule atom program				-- Is this atom a rule?
+		return
+			| atomFact /= NoFact = rinse atomFact args	-- The atom is constant and a fact
+			| ruleFact /= NoFact = rinse ruleFact args 	-- The atom is a rule and a fact
+			| otherwise = NoFact						-- The atom is not a fact
 
-rinse :: Result -> [Term] -> Result				-- Removes all variables from facts not present in args, e.g. rinse [X -> a, Y -> b, Z -> c] [X, Y] = [X -> a, Y -> B]
+rinse :: Result -> [Term] -> Result						-- Removes all variables from facts not present in args, e.g. rinse [X -> a, Y -> b, Z -> c] [X, Y] = [X -> a, Y -> B]
 rinse (Fact facts) args = Fact $ nub $ map(\fact -> filter (\(t1, t2) -> elem t1 args) fact) facts
 			
 evalRule :: Atom -> Program -> Result	
@@ -120,5 +116,6 @@ mergeTerms (l1:l2:ls) = mergeTerms(merge : ls)
 	where
 		merge = [(nub (x ++ y)) | x <- l1, y <- l2, not (conflictingSub x y)]
 
+conflictingSub :: [(Term, Term)] -> [(Term, Term)] -> [(Term, Term)]
 conflictingSub s1 s2 = [] /= [(t1, t2) | t1@(t11, t12) <- s1, t2@(t21, t22) <- s2, t11 == t21, t12 /= t22 && notElem Anything [t12, t22]]
 	

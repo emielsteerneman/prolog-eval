@@ -15,15 +15,11 @@ instance Show Term where
 instance Show Atom where
 	show (Atom name args) = show(name) ++ " " ++ show(args)
 
--- instance Show Sub where
-	-- show (Sub list) = " Sub[" ++ printSubs list ++ "] "
-	-- show NoSub = "NoSub"
-	
 instance Show Result where
-	show (Fact subs) = "Fact " ++ show(subs)
+	show (Fact subs) = "Fact " ++ (foldl (++) [] (map (\sub -> "\n\t" ++ (printSub sub)) subs))
 	show NoFact = "NoFact"
 
-printSubs :: [(Term, Term)] -> String
-printSubs [(t1, t2)] = "(" ++ (show t1) ++ " -> " ++ (show t2) ++ ")" 
-printSubs (x:xs) = (printSubs [x]) ++ ", " ++ (printSubs xs)
+printSub :: [(Term, Term)] -> String
+printSub [(t1, t2)] = "(" ++ (show t1) ++ " -> " ++ (show t2) ++ ")" 
+printSub (x:xs) = (printSub [x]) ++ ", " ++ (printSub xs)
 
