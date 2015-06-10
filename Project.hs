@@ -116,6 +116,6 @@ mergeTerms (l1:l2:ls) = mergeTerms(merge : ls)
 	where
 		merge = [(nub (x ++ y)) | x <- l1, y <- l2, not (conflictingSub x y)]
 
-conflictingSub :: [(Term, Term)] -> [(Term, Term)] -> [(Term, Term)]
+conflictingSub :: [(Term, Term)] -> [(Term, Term)] -> Bool
 conflictingSub s1 s2 = [] /= [(t1, t2) | t1@(t11, t12) <- s1, t2@(t21, t22) <- s2, t11 == t21, t12 /= t22 && notElem Anything [t12, t22]]
 	
